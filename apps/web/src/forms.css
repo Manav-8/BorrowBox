@@ -1,0 +1,13 @@
+.form-page{max-width:800px;min-height:70vh;margin:0 auto;padding:66px 0}
+.form-page>h1{font-family:'DM Serif Display',serif;font-weight:400;font-size:43px;letter-spacing:-1px;margin:12px 0 7px}
+.form-page>p{font-size:13px;color:#747a70;margin:0 0 27px}
+.editor-form{display:grid;grid-template-columns:1fr 1fr;gap:16px;padding:24px;background:#fff;border:1px solid var(--line);border-radius:9px}
+.editor-form label{display:flex;flex-direction:column;gap:7px;color:#50594b;font-size:11px;font-weight:600}
+.editor-form input,.editor-form select,.editor-form textarea{width:100%;border:1px solid #dfe3d9;border-radius:5px;padding:11px;color:#30372d;background:#fff;font-size:12px;outline-color:#748f67}
+.editor-form input,.editor-form select{height:42px}.editor-form textarea{resize:vertical;line-height:1.5}
+.editor-form .wide,.form-footer.wide{grid-column:1/-1}.optional{color:#92978d;font-size:10px;font-weight:400}
+.form-footer{display:flex;justify-content:flex-end;gap:10px;margin-top:5px}
+.form-success{text-align:center;display:flex;flex-direction:column;align-items:center;justify-content:center}.form-success .eyebrow{margin-top:18px}.form-success>h1{margin:10px 0}.form-success>p{max-width:450px;line-height:1.65;margin-bottom:20px}
+.hero-actions>.text-link{font-size:11px}
+@media(max-width:850px){.form-page{margin:0 5vw;padding:48px 0}}
+@media(max-width:560px){.editor-form{grid-template-columns:1fr;padding:17px}.editor-form .wide,.form-footer.wide{grid-column:auto}.form-page>h1{font-size:36px}.form-footer{flex-wrap:wrap}.form-footer .button{flex:1}}

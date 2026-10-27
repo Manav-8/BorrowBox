@@ -1,0 +1,8 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer components {
+  .button { @apply transition-colors duration-200; }
+  .editor-form input:focus, .editor-form select:focus, .editor-form textarea:focus { @apply ring-2 ring-sage/30; }
+}

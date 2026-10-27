@@ -1,0 +1,272 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+enum UserRole {
+  USER
+  ADMIN
+}
+enum AccountStatus {
+  ACTIVE
+  SUSPENDED
+}
+enum ListingStatus {
+  DRAFT
+  ACTIVE
+  PAUSED
+  RENTED
+  ARCHIVED
+}
+enum BorrowRequestStatus {
+  OPEN
+  MATCHED
+  FULFILLED
+  CANCELLED
+  EXPIRED
+}
+enum ConversationStatus {
+  ACTIVE
+  CLOSED
+}
+enum OfferStatus {
+  PENDING
+  ACCEPTED
+  COUNTERED
+  REJECTED
+  EXPIRED
+}
+enum BookingStatus {
+  PENDING_PAYMENT
+  CONFIRMED
+  ACTIVE
+  RETURNED
+  COMPLETED
+  PAYMENT_FAILED
+  EXPIRED
+  CANCELLED
+  DISPUTED
+}
+enum PaymentStatus {
+  CREATED
+  AUTHORIZED
+  CAPTURED
+  FAILED
+  REFUNDED
+}
+enum SettlementStatus {
+  NOT_APPLICABLE
+  PENDING
+  SETTLED
+}
+
+model User {
+  id           String        @id @default(cuid())
+  email        String        @unique
+  passwordHash String
+  displayName  String
+  phone        String?
+  bio          String?
+  avatarUrl    String?
+  role         UserRole      @default(USER)
+  status       AccountStatus @default(ACTIVE)
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+  listings     Listing[]
+  requests     BorrowRequest[]
+  sentMessages Message[]
+  conversations ConversationParticipant[]
+  sentOffers   Offer[]       @relation("OfferSender")
+  receivedOffers Offer[]     @relation("OfferRecipient")
+  borrowerBookings Booking[] @relation("Borrower")
+  lenderBookings Booking[]   @relation("Lender")
+  reviewsGiven Review[]      @relation("ReviewAuthor")
+  reviewsReceived Review[]  @relation("ReviewTarget")
+}
+
+model Listing {
+  id              String        @id @default(cuid())
+  ownerId         String
+  owner           User          @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  title           String
+  description     String
+  category        String
+  imageUrls       String[]
+  dailyPricePaise Int
+  depositPaise    Int           @default(0)
+  condition       String
+  pickupArea      String
+  conditions      String?
+  status          ListingStatus @default(DRAFT)
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+  offers          Offer[]
+  bookings        Booking[]
+  conversations   Conversation[]
+  @@index([status, category, createdAt])
+  @@index([ownerId, status])
+}
+
+model BorrowRequest {
+  id              String             @id @default(cuid())
+  requesterId     String
+  requester       User               @relation(fields: [requesterId], references: [id], onDelete: Cascade)
+  title           String
+  description     String
+  category        String
+  startDate       DateTime           @db.Date
+  endDate         DateTime           @db.Date
+  budgetPaise     Int
+  location        String?
+  radiusKm        Int?
+  expiresAt       DateTime
+  status          BorrowRequestStatus @default(OPEN)
+  createdAt       DateTime           @default(now())
+  updatedAt       DateTime           @updatedAt
+  offers          Offer[]
+  conversations   Conversation[]
+  @@index([status, category, startDate, endDate])
+  @@index([requesterId, status])
+}
+
+model Conversation {
+  id         String @id @default(cuid())
+  dedupeKey  String @unique
+  listingId  String?
+  requestId  String?
+  listing    Listing? @relation(fields: [listingId], references: [id], onDelete: SetNull)
+  request    BorrowRequest? @relation(fields: [requestId], references: [id], onDelete: SetNull)
+  status     ConversationStatus @default(ACTIVE)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  participants ConversationParticipant[]
+  messages   Message[]
+  offers     Offer[]
+  @@index([updatedAt])
+}
+
+model ConversationParticipant {
+  conversationId String
+  userId         String
+  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  user           User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  joinedAt       DateTime @default(now())
+  lastReadAt     DateTime?
+  @@id([conversationId, userId])
+  @@index([userId, joinedAt])
+}
+
+model Message {
+  id             String @id @default(cuid())
+  conversationId String
+  senderId       String
+  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  sender         User @relation(fields: [senderId], references: [id], onDelete: Cascade)
+  body           String
+  createdAt      DateTime @default(now())
+  @@index([conversationId, createdAt])
+}
+
+model Offer {
+  id               String @id @default(cuid())
+  conversationId   String
+  listingId        String?
+  requestId        String?
+  senderId         String
+  recipientId      String
+  previousOfferId  String?
+  conversation     Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  listing          Listing? @relation(fields: [listingId], references: [id], onDelete: SetNull)
+  request          BorrowRequest? @relation(fields: [requestId], references: [id], onDelete: SetNull)
+  sender           User @relation("OfferSender", fields: [senderId], references: [id], onDelete: Cascade)
+  recipient        User @relation("OfferRecipient", fields: [recipientId], references: [id], onDelete: Cascade)
+  previousOffer    Offer? @relation("OfferChain", fields: [previousOfferId], references: [id], onDelete: SetNull)
+  counteroffers    Offer[] @relation("OfferChain")
+  startDate        DateTime @db.Date
+  endDate          DateTime @db.Date
+  dailyPricePaise  Int
+  depositPaise     Int @default(0)
+  message          String?
+  status           OfferStatus @default(PENDING)
+  expiresAt        DateTime
+  acceptedAt       DateTime?
+  createdAt        DateTime @default(now())
+  bookings         Booking[]
+  @@index([conversationId, createdAt])
+  @@index([recipientId, status, expiresAt])
+}
+
+model Booking {
+  id               String @id @default(cuid())
+  borrowerId       String
+  lenderId         String
+  listingId        String
+  acceptedOfferId  String @unique
+  borrower         User @relation("Borrower", fields: [borrowerId], references: [id], onDelete: Restrict)
+  lender           User @relation("Lender", fields: [lenderId], references: [id], onDelete: Restrict)
+  listing          Listing @relation(fields: [listingId], references: [id], onDelete: Restrict)
+  acceptedOffer    Offer @relation(fields: [acceptedOfferId], references: [id], onDelete: Restrict)
+  startDate        DateTime @db.Date
+  endDate          DateTime @db.Date
+  dailyPricePaise  Int
+  rentalDays       Int
+  rentalTotalPaise Int
+  serviceFeePaise  Int
+  depositPaise     Int
+  totalPaise       Int
+  paymentExpiresAt DateTime @default(dbgenerated("(CURRENT_TIMESTAMP + interval '15 minutes')"))
+  status           BookingStatus @default(PENDING_PAYMENT)
+  cancellationReason String?
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+  payments         Payment[]
+  reviews          Review[]
+  @@index([listingId, status, startDate, endDate])
+  @@index([borrowerId, status])
+  @@index([lenderId, status])
+}
+
+model Payment {
+  id               String @id @default(cuid())
+  bookingId        String
+  booking          Booking @relation(fields: [bookingId], references: [id], onDelete: Restrict)
+  provider         String @default("razorpay")
+  orderId          String? @unique
+  paymentId        String? @unique
+  amountPaise      Int
+  currency         String @default("INR")
+  status           PaymentStatus @default(CREATED)
+  settlementStatus SettlementStatus @default(NOT_APPLICABLE)
+  lastWebhookEvent String?
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+  @@index([bookingId, status])
+}
+
+model WebhookEvent {
+  id          String @id
+  provider    String
+  eventType   String
+  processedAt DateTime @default(now())
+  @@index([provider, processedAt])
+}
+
+model Review {
+  id        String @id @default(cuid())
+  bookingId String
+  authorId  String
+  targetId  String
+  booking   Booking @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  author    User @relation("ReviewAuthor", fields: [authorId], references: [id], onDelete: Cascade)
+  target    User @relation("ReviewTarget", fields: [targetId], references: [id], onDelete: Cascade)
+  rating    Int
+  comment   String?
+  createdAt DateTime @default(now())
+  @@unique([bookingId, authorId])
+  @@index([targetId, createdAt])
+}
