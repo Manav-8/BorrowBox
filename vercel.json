@@ -3,5 +3,8 @@
   "installCommand": "npm install",
   "buildCommand": "npm run build --workspace @borrowbox/web",
   "outputDirectory": "dist",
-  "rewrites": [{ "source": "/(.*)", "destination": "/index.html" }]
+  "rewrites": [
+    { "source": "/api/:path*", "destination": "https://borrowbox-3mhu.onrender.com/api/:path*" },
+    { "source": "/(.*)", "destination": "/index.html" }
+  ]
 }
