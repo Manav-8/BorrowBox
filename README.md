@@ -67,10 +67,8 @@ Target: Vercel for `apps/web`, Render for the Node.js/Socket.IO API, Supabase Po
 
 ## Submission checklist
 
-- [ ] Repository URL: ____________________
-- [ ] Deployed application URL: ____________________
-- [ ] Demo video URL: ____________________
-- [ ] Student / course / project details: ____________________
+
+- [ ] Demo video URL: https://drive.google.com/drive/folders/15FKCbiFc0dA9atPv6W1FCU94x_-Ng_kp?usp=drive_link
 - [ ] Technology stack: React, TypeScript, Express, PostgreSQL, Prisma, Supabase, Socket.IO, Razorpay TEST MODE
 - [ ] Confirm `.env` and provider secrets are not in repository history.
 - [ ] Confirm real service checks are documented separately from mocked/unit checks.
