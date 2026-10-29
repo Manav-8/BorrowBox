@@ -2,6 +2,10 @@
 
 BorrowBox is a local peer-to-peer borrowing and lending marketplace. It helps students, campus communities and neighbors find useful items nearby without buying something they only need temporarily.
 
+## Project resources
+
+[Open the BorrowBox project Google Drive folder](https://drive.google.com/drive/folders/15FKCbiFc0dA9atPv6W1FCU94x_-Ng_kp?usp=drive_link)
+
 ## Problem and solution
 
 Useful equipment often sits unused while nearby people need it briefly. BorrowBox brings listings, borrowing requests and the people behind them together. A user can lend and borrow from the same account, with persistent, database-backed records and server-enforced permissions.
