@@ -59,6 +59,11 @@ export async function currentUser(req: Request, res: Response) {
   return res.json({ user });
 }
 
+export function createSocketToken(req: Request, res: Response) {
+  const token = jwt.sign({ sub: req.userId!, purpose: 'socket' }, requireAuthConfig(), { expiresIn: '5m', issuer: 'borrowbox-api' });
+  return res.json({ token });
+}
+
 export async function updateProfile(req: Request, res: Response) {
   const input = profileSchema.parse(req.body);
   const user = await prisma.user.update({ where: { id: req.userId! }, data: input, select: { id: true, email: true, displayName: true, phone: true, bio: true, avatarUrl: true, createdAt: true } });
